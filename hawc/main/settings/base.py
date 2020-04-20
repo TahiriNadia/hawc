@@ -83,6 +83,7 @@ INSTALLED_APPS = (
     "django.contrib.staticfiles",
     "django.contrib.admin",
     "django.contrib.humanize",
+    "django_plotly_dash.apps.DjangoPlotlyDashConfig",
     # External apps
     "rest_framework",
     "rest_framework.authtoken",
@@ -188,9 +189,7 @@ LOGGING = {
     "version": 1,
     "disable_existing_loggers": True,
     "formatters": {
-        "verbose": {
-            "format": "%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s"
-        },
+        "verbose": {"format": "%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s"},
         "simple": {"format": "%(levelname)s %(message)s"},
     },
     "filters": {"require_debug_false": {"()": "django.utils.log.RequireDebugFalse"}},
@@ -278,3 +277,7 @@ WEBPACK_LOADER = {
 }
 
 MODIFY_HELP_TEXT = "makemigrations" not in sys.argv
+
+# Embed Dash in webpages
+X_FRAME_OPTIONS = "SAMEORIGIN"
+

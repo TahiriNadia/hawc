@@ -6,7 +6,7 @@ from django.urls import reverse_lazy
 from django.views.generic import FormView, RedirectView, TemplateView
 
 from ..assessment.models import Assessment
-from ..common.helper import HAWCDjangoJSONEncoder
+from ..common.helper import HAWCDjangoJSONEncoder, HAWCtoDateString
 from ..common.views import (
     BaseCreate,
     BaseDelete,
@@ -17,7 +17,8 @@ from ..common.views import (
 )
 from ..riskofbias.models import RiskOfBiasMetric
 from . import forms, models
-
+from ..assessment.serializers import AssessmentSerializer
+import datetime
 
 # SUMMARY-TEXT
 class SummaryTextJSON(BaseDetail):
@@ -47,9 +48,7 @@ def validSummaryTextChange(assessment_id):
         "status": "ok",
         "content": models.SummaryText.get_assessment_descendants(assessment_id, json_encode=False),
     }
-    return HttpResponse(
-        json.dumps(response, cls=HAWCDjangoJSONEncoder), content_type="application/json"
-    )
+    return HttpResponse(json.dumps(response, cls=HAWCDjangoJSONEncoder), content_type="application/json")
 
 
 class SummaryTextCreate(BaseCreate):
@@ -172,9 +171,7 @@ class VisualizationCreate(BaseCreate):
         context["instance"] = {}
         context["visual_type"] = int(self.kwargs.get("visual_type"))
         context["smart_tag_form"] = forms.SmartTagForm(assessment_id=self.assessment.id)
-        context["rob_metrics"] = json.dumps(
-            list(RiskOfBiasMetric.objects.get_metrics_for_visuals(self.assessment.id))
-        )
+        context["rob_metrics"] = json.dumps(list(RiskOfBiasMetric.objects.get_metrics_for_visuals(self.assessment.id)))
         return context
 
 
@@ -212,9 +209,7 @@ class VisualizationUpdate(BaseUpdate):
         context["instance"] = self.object.get_json()
         context["visual_type"] = self.object.visual_type
         context["smart_tag_form"] = forms.SmartTagForm(assessment_id=self.assessment.id)
-        context["rob_metrics"] = json.dumps(
-            list(RiskOfBiasMetric.objects.get_metrics_for_visuals(self.assessment.id))
-        )
+        context["rob_metrics"] = json.dumps(list(RiskOfBiasMetric.objects.get_metrics_for_visuals(self.assessment.id)))
         return context
 
 
@@ -260,9 +255,7 @@ class DataPivotNew(BaseCreate):
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
         if self.request.GET.get("reset_row_overrides"):
-            kwargs["initial"]["settings"] = models.DataPivot.reset_row_overrides(
-                kwargs["initial"]["settings"]
-            )
+            kwargs["initial"]["settings"] = models.DataPivot.reset_row_overrides(kwargs["initial"]["settings"])
         return kwargs
 
 
@@ -384,3 +377,24 @@ class DataPivotDelete(GetDataPivotObjectMixin, BaseDelete):
 
     def get_success_url(self):
         return reverse_lazy("summary:visualization_list", kwargs={"pk": self.assessment.pk})
+
+
+class BubblePlot(BaseDetail):
+    model = Assessment
+    template_name = "summary/test.html"
+
+    def get_object_json(self):
+        queryset = self.model.objects.filter(id=497).values()
+        return [
+            {
+                key: HAWCtoDateString(value) if isinstance(value, datetime.datetime) else value
+                for key, value in element.items()
+            }
+            for element in list(queryset)
+        ]
+
+    def get(self, request, *args, **kwargs):
+        obj_dict = AssessmentSerializer(self.get_object()).data
+        # request.session["django_plotly_dash"] = {k: obj_dict[k] for k in ["name", "year"]}
+        request.session["django_plotly_dash"] = self.get_object_json()
+        return super().get(request, *args, **kwargs)
