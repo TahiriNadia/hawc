@@ -259,11 +259,12 @@ class DataPivotVisualization extends D3Plot {
         var font;
         switch (this.dp_settings.plot_settings.font_style) {
             case "Times New Roman":
-                font = "Times New Roman;";
+                font = '"Times New Roman", Times, serif';
                 break;
             case "Arial":
             default:
-                font = "Arial;";
+                font = "Arial, Helvetica, sans-serif";
+                break;
         }
         d3.select(this.svg).attr("style", `font-family: ${font}`);
     }

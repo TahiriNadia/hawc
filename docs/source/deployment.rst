@@ -77,8 +77,6 @@ please specify in the docker-compose `.env` file (example secrets below):
 
 Other required files are:
 
-- TTF fonts (place in ``compose/django/fonts``)
-    - Arial, HelveticaNeue, Times New Roman
 - nginx configuration (place in ``compose/nginx/conf/nginx.conf``)
 - nginx ssl certificates (place in ``compose/nginx/ssl``)
 
